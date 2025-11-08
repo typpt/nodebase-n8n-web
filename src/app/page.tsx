@@ -1,8 +1,13 @@
 import { Button } from '@/components/ui/button';
-import db from '@/lib/db';
+import { getQueryClient, trpc } from '@/integrations/trpc/server';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { Suspense } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import Client from './client';
 
 export default async function Home() {
-  const users = await db.user.findMany();
+  const queryClient = getQueryClient();
+  void queryClient.prefetchQuery(trpc.getMany.queryOptions());
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-y-2 bg-zinc-50 font-sans dark:bg-black">
@@ -10,7 +15,13 @@ export default async function Home() {
       <Button type="button" variant="default" size="lg">
         Click Me
       </Button>
-      <div>{JSON.stringify(users, null, 2)}</div>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <ErrorBoundary fallback={<p>Error</p>}>
+          <Suspense fallback={<p>Loading...</p>}>
+            <Client />
+          </Suspense>
+        </ErrorBoundary>
+      </HydrationBoundary>
     </div>
   );
 }
