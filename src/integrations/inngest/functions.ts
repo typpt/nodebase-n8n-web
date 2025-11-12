@@ -1,17 +1,22 @@
-import db from '@/lib/db';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { generateText } from 'ai';
 import { inngest } from './client';
 
-export const exucutes = inngest.createFunction(
-  { id: 'hello-world' },
-  { event: 'test/hello.world' },
+const google = createGoogleGenerativeAI();
 
-  async ({ event, step }) => {
-    await step.run('create-workflow', async () => {
-      return await db.workflow.create({
-        data: {
-          name: 'workflow-from-inngest',
-        },
-      });
+export const execute = inngest.createFunction(
+  { id: 'execute' },
+  { event: 'execute/ai' },
+
+  async ({ step }) => {
+    const { steps } = await step.ai.wrap('gemini-generate-text', generateText, {
+      model: google('gemini-2.5-flash'),
+      system:
+        'You are a helpful AI assistant that writes and explains things clearly and concisely.',
+      prompt:
+        'Write a short summary of an article about climate change in 3 sentences.',
     });
+
+    return steps;
   }
 );

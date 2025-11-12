@@ -10,6 +10,7 @@ export default function Home() {
   const trpc = useTRPC();
   const { data: workflows } = useQuery(trpc.getWorkflows.queryOptions());
   const createWorkflow = useMutation(trpc.createWorkflow.mutationOptions());
+  const testAI = useMutation(trpc.testAI.mutationOptions());
 
   return (
     <div className="flex min-h-screen p-5 flex-col items-center justify-center gap-y-2 bg-zinc-50 font-sans dark:bg-black">
@@ -28,6 +29,20 @@ export default function Home() {
         size="lg"
       >
         Create Workflow
+      </Button>
+      <Button
+        type="button"
+        onClick={() =>
+          testAI.mutate(undefined, {
+            onSuccess: () => toast.success('Test AI successfully'),
+            onError: (err) => toast.error(err.message),
+          })
+        }
+        disabled={testAI.isPending}
+        variant="default"
+        size="lg"
+      >
+        Test AI
       </Button>
       <LogoutButton />
     </div>
