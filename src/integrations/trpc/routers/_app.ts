@@ -1,8 +1,8 @@
 import db from '@/lib/db';
-import { baseProcedure, createTRPCRouter } from '../init';
+import { createTRPCRouter, protectedProcedure } from '../init';
 
 export const appRouter = createTRPCRouter({
-  getMany: baseProcedure.query(async () => {
+  users: protectedProcedure.query(async () => {
     return await db.user.findMany();
   }),
 });

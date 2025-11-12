@@ -1,0 +1,205 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { authClient } from '@/lib/auth-client';
+import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import {
+  RegisterFormValues,
+  registerSchema,
+} from '../validators/auth-validator';
+
+export default function RegisterForm() {
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const router = useRouter();
+
+  async function onSubmit(values: RegisterFormValues) {
+    await authClient.signUp.email({
+      email: values.email,
+      name: values.name,
+      password: values.password,
+      callbackURL: '/',
+      fetchOptions: {
+        onSuccess: () => {
+          toast.success('Sign up successful! Welcome aboard.');
+          router.push('/');
+        },
+        onError: (ctx) => {
+          console.error(ctx.error?.message || 'Unknown error');
+          toast.error(
+            `Sign up failed: ${ctx.error?.message || 'Please try again later.'}`
+          );
+        },
+      },
+    });
+  }
+
+  const isPending = form.formState.isSubmitting;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle>Get started</CardTitle>
+          <CardDescription>Create your account to get started</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="grid gap-6">
+                <div className="flex flex-col gap-4">
+                  <Button
+                    type="button"
+                    disabled={isPending}
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                  >
+                    <span>Continue with Google</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={isPending}
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                  >
+                    <span>Continue with Github</span>
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            disabled={isPending}
+                            placeholder="jhon exmaple"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            disabled={isPending}
+                            placeholder="jhon@exmaple.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            disabled={isPending}
+                            placeholder="******"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            disabled={isPending}
+                            placeholder="******"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    variant="default"
+                    size="lg"
+                    className="w-full"
+                  >
+                    {isPending && <Spinner />}
+                    <span>Sign up</span>
+                  </Button>
+                </div>
+                <p className="text-sm text-center">
+                  <span className="text-muted-foreground">
+                    Already have an account?
+                  </span>{' '}
+                  <Link
+                    href="/sign-in"
+                    className={cn(
+                      'underline underline-offset-4',
+                      isPending && 'pointer-events-none cursor-not-allowed'
+                    )}
+                  >
+                    Login
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
