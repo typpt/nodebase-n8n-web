@@ -40,5 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /src/generated/prisma
 /prisma/migrations
+
+# Sentry Config File
+.env.sentry-build-plugin

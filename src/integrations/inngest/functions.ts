@@ -15,6 +15,11 @@ export const execute = inngest.createFunction(
         'You are a helpful AI assistant that writes and explains things clearly and concisely.',
       prompt:
         'Write a short summary of an article about climate change in 3 sentences.',
+      experimental_telemetry: {
+        isEnabled: true,
+        recordInputs: true,
+        recordOutputs: true,
+      },
     });
 
     return steps;
