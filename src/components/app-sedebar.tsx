@@ -1,5 +1,6 @@
 'use client';
 
+import { useHasActiveSubcription } from '@/features/subcriptions/hooks/use-subcription';
 import { authClient } from '@/lib/auth-client';
 import {
   CreditCard,
@@ -53,6 +54,7 @@ export default function AppSidebar() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
+  const { hasActiveSubcription, isLoading } = useHasActiveSubcription();
 
   function handleLogout() {
     startTransition(async () => {
@@ -111,19 +113,23 @@ export default function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Upgrade to Pro"
-              className="h-10 gap-x-4 px-4"
-            >
-              <StarIcon className="size-4" />
-              <span>Upgrade to Pro</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {!hasActiveSubcription && !isLoading && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={async () => await authClient.checkout({ slug: 'pro' })}
+                tooltip="Upgrade to Pro"
+                className="h-10 gap-x-4 px-4"
+              >
+                <StarIcon className="size-4" />
+                <span>Upgrade to Pro</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
+              onClick={async () => await authClient.customer.portal()}
               tooltip="Billing Portal"
               className="h-10 gap-x-4 px-4"
             >
