@@ -1,3 +1,4 @@
+import { PAGINATION } from '@/constant/pagination';
 import {
   createTRPCRouter,
   premiumProcedure,
@@ -66,7 +67,59 @@ export const workflowsRouter = createTRPCRouter({
       });
     }),
 
-  getMany: protectedProcedure.query(async ({ ctx }) => {
-    return await db.workflow.findMany({ where: { userId: ctx.auth.user.id } });
-  }),
+  getMany: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().default(PAGINATION.DEFAULT_PAGE),
+        pageSize: z
+          .number()
+          .min(PAGINATION.MIN_PAGE_SIZE)
+          .max(PAGINATION.MAX_PAGE_SIZE)
+          .default(PAGINATION.DEFAULT_PAGE_SIZE),
+        search: z.string().default(''),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, pageSize, search } = input;
+
+      const [items, totalCount] = await Promise.all([
+        await db.workflow.findMany({
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          where: {
+            userId: ctx.auth.user.id,
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+          orderBy: {
+            updatedAt: 'desc',
+          },
+        }),
+
+        await db.workflow.count({
+          where: {
+            userId: ctx.auth.user.id,
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        }),
+      ]);
+
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        page,
+        pageSize,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+        items,
+      };
+    }),
 });
