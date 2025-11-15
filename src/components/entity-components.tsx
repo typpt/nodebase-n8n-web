@@ -1,6 +1,7 @@
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, SearchIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 type EntityHeaderProps = {
   title: string;
@@ -59,6 +60,73 @@ export function EntityHeader({
           </Link>
         </Button>
       )}
+    </div>
+  );
+}
+
+type EntitySearchProps = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+};
+
+export function EntitySearch({
+  onChange,
+  value,
+  placeholder = 'Search',
+}: EntitySearchProps) {
+  return (
+    <div className="relative ml-auto">
+      <SearchIcon className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="max-w-[200px] w-full border-border bg-background pl-8 shadow-none"
+      />
+    </div>
+  );
+}
+
+type EntityPaginationProps = {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  disabled?: boolean;
+};
+
+export function EntityPagination({
+  onPageChange,
+  page,
+  totalPages,
+  disabled,
+}: EntityPaginationProps) {
+  return (
+    <div className="flex items-center justify-between gap-x-2 w-full">
+      <p className="flex-1 text-sm text-muted-foreground">
+        Page {page} of {totalPages || 1}
+      </p>
+      <div className="flex items-center justify-end gap-x-2 py-4">
+        <Button
+          type="button"
+          disabled={disabled || page === 1}
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          variant="outline"
+          size="default"
+        >
+          Previous
+        </Button>
+        <Button
+          type="button"
+          disabled={disabled || page === totalPages || totalPages === 0}
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+          variant="outline"
+          size="default"
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 }
