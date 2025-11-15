@@ -1,7 +1,31 @@
-import { PlusIcon, SearchIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  MoreHorizontalIcon,
+  PackageOpenIcon,
+  PlusIcon,
+  SearchIcon,
+  TrashIcon,
+  TriangleAlertIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardTitle } from './ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from './ui/empty';
 import { Input } from './ui/input';
+import { Spinner } from './ui/spinner';
 
 type EntityHeaderProps = {
   title: string;
@@ -128,6 +152,174 @@ export function EntityPagination({
         </Button>
       </div>
     </div>
+  );
+}
+
+type EntityStateProps = {
+  message?: string;
+};
+
+export function EntityLoading({ message }: EntityStateProps) {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center h-full gap-y-4">
+      <Spinner className="size-6" />
+      {!!message && <p className="text-sm text-muted-foreground">{message}</p>}
+    </div>
+  );
+}
+
+export function EntityError({ message }: EntityStateProps) {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center h-full gap-y-4">
+      <TriangleAlertIcon className="size-6 text-primary" />
+      {!!message && <p className="text-sm text-muted-foreground">{message}</p>}
+    </div>
+  );
+}
+
+type EntityEmptyProps = {
+  onNew?: () => void;
+  disabled?: boolean;
+} & EntityStateProps;
+
+export function EntityEmpty({ disabled, message, onNew }: EntityEmptyProps) {
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <PackageOpenIcon className="size-6" />
+        </EmptyMedia>
+        <EmptyTitle>No Items</EmptyTitle>
+        {!!message && <EmptyDescription>{message}</EmptyDescription>}{' '}
+      </EmptyHeader>
+      {!!onNew && (
+        <EmptyContent>
+          <Button
+            type="button"
+            onClick={onNew}
+            disabled={disabled}
+            variant="default"
+            size="default"
+          >
+            Add Item
+          </Button>
+        </EmptyContent>
+      )}
+    </Empty>
+  );
+}
+
+type EntityListProps<T> = {
+  items: T[];
+  renderItem: (item: T, index: number) => Readonly<React.ReactNode>;
+  entityEmpty?: Readonly<React.ReactNode>;
+  getKey?: (item: T, index: number) => string | number;
+  className?: string;
+};
+
+export function EntityList<T>({
+  items,
+  className,
+  entityEmpty,
+  getKey,
+  renderItem,
+}: EntityListProps<T>) {
+  if (items.length === 0 && entityEmpty) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="max-w-sm mx-auto">{entityEmpty}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('flex flex-col gap-y-4', className)}>
+      {items.map((item, index) => (
+        <div key={getKey ? getKey(item, index) : index}>
+          {renderItem(item, index)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type EntityItemProps = {
+  href: string;
+  title: string;
+  image?: Readonly<React.ReactNode>;
+  actions?: Readonly<React.ReactNode>;
+  subtitle?: Readonly<React.ReactNode>;
+  onRemove?: () => void;
+  isRemoving?: boolean;
+  className?: string;
+};
+
+export function EntityItem({
+  href,
+  title,
+  actions,
+  className,
+  image,
+  isRemoving,
+  onRemove,
+  subtitle,
+}: EntityItemProps) {
+  async function handleRemove(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isRemoving) return;
+
+    if (onRemove) await onRemove();
+  }
+
+  return (
+    <Link href={href} prefetch>
+      <Card
+        className={cn(
+          'cursor-pointer p-4 shadow-none hover:shadow',
+          isRemoving && 'opacity-50 cursor-not-allowed',
+          className
+        )}
+      >
+        <CardContent className="flex flex-row items-center justify-between p-0">
+          <div className="flex items-center gap-3">
+            {image}
+            <div>
+              <CardTitle className="text-base font-medium">{title}</CardTitle>
+              {!!subtitle && (
+                <CardDescription className="text-sm">
+                  {subtitle}
+                </CardDescription>
+              )}
+            </div>
+          </div>
+          {(onRemove || actions) && (
+            <div className="flex items-center gap-x-4">
+              {actions}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    onClick={(e) => e.stopPropagation()}
+                    variant="ghost"
+                    size="icon"
+                  >
+                    <MoreHorizontalIcon className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={handleRemove}>
+                    <TrashIcon className="size-4" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
