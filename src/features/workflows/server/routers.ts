@@ -59,7 +59,7 @@ export const workflowsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      return await db.workflow.findUnique({
+      return await db.workflow.findUniqueOrThrow({
         where: {
           id: input.id,
           userId: ctx.auth.user.id,

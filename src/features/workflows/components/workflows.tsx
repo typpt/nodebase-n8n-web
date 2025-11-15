@@ -13,6 +13,7 @@ import {
 import type { Workflow } from '@/generated/prisma/client';
 import { useEntitySearch } from '@/hooks/use-entity-search';
 import { useUpgradeModal } from '@/hooks/use-upgrade-modal';
+import { formatDistanceToNow } from 'date-fns';
 import { WorkflowIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -46,7 +47,13 @@ export function WorkflowsItem({ data }: { data: Workflow }) {
     <EntityItem
       href={`/workflows/${data.id}`}
       title={`${data.name}`}
-      subtitle={<>update TODO &bull; Created TODO</>}
+      subtitle={
+        <>
+          update {formatDistanceToNow(data.updatedAt, { addSuffix: true })}{' '}
+          &bull; Created{' '}
+          {formatDistanceToNow(data.createdAt, { addSuffix: true })}
+        </>
+      }
       image={
         <div className="size-8 flex items-center justify-center">
           <WorkflowIcon className="size-5 text-muted-foreground" />
