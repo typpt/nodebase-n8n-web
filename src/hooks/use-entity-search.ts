@@ -17,18 +17,9 @@ export function useEntitySearch<T extends ParamsProps>({
   setParams,
   debounceMs = 500,
 }: UseEntitySearchProps<T>) {
-  const [localSearch, setLocalSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState(params.search);
 
   useEffect(() => {
-    if (params.search !== '' && localSearch === '') {
-      setParams({
-        ...params,
-        page: PAGINATION.DEFAULT_PAGE,
-        search: '',
-      });
-      return;
-    }
-
     const timer = setTimeout(() => {
       if (params.search !== localSearch) {
         setParams({
@@ -40,12 +31,7 @@ export function useEntitySearch<T extends ParamsProps>({
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [debounceMs, localSearch, params, setParams]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLocalSearch(params.search);
-  }, [params.search]);
+  }, [localSearch, debounceMs, params, setParams]);
 
   return {
     searchValue: localSearch,

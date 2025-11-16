@@ -42,7 +42,7 @@ export const workflowsRouter = createTRPCRouter({
       });
     }),
 
-  update: protectedProcedure
+  updateName: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -58,6 +58,67 @@ export const workflowsRouter = createTRPCRouter({
         data: {
           name: input.name,
         },
+      });
+    }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        nodes: z.array(
+          z.object({
+            id: z.string(),
+            type: z.string().nullish(),
+            position: z.object({ x: z.number(), y: z.number() }),
+            data: z.record(z.string(), z.any().optional()),
+          })
+        ),
+        edges: z.array(
+          z.object({
+            source: z.string(),
+            target: z.string(),
+            sourceHandle: z.string().nullish(),
+            targetHandle: z.string().nullish(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { edges, id, nodes } = input;
+      const workflow = await db.workflow.findUniqueOrThrow({
+        where: { id, userId: ctx.auth.user.id },
+      });
+
+      return await db.$transaction(async (tx) => {
+        await tx.node.deleteMany({ where: { workflowId: id } });
+
+        await tx.node.createMany({
+          data: nodes.map((n) => ({
+            id: n.id,
+            workflowId: id,
+            name: n.type || 'unknown',
+            position: n.position,
+            type: n.type as NodeType,
+            data: n.data || {},
+          })),
+        });
+
+        await tx.connection.createMany({
+          data: edges.map((c) => ({
+            workflowId: id,
+            fromNodeId: c.source,
+            toNodeId: c.target,
+            fromOutput: c.sourceHandle || 'main',
+            toInput: c.targetHandle || 'main',
+          })),
+        });
+
+        await tx.workflow.update({
+          where: { id },
+          data: { updatedAt: new Date() },
+        });
+
+        return workflow;
       });
     }),
 
