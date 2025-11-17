@@ -1,8 +1,15 @@
 import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
+import { CheckCircle2Icon, XCircleIcon } from 'lucide-react';
+import { Spinner } from '../ui/spinner';
+import { NodeStatus } from './node-status-indicator';
 
-export function BaseNode({ className, ...props }: ComponentProps<'div'>) {
+type BaseNodeProps = {
+  status?: NodeStatus;
+} & React.ComponentProps<'div'>;
+
+export function BaseNode({ className, status, ...props }: BaseNodeProps) {
   return (
     <div
       className={cn(
@@ -19,7 +26,18 @@ export function BaseNode({ className, ...props }: ComponentProps<'div'>) {
       )}
       tabIndex={0}
       {...props}
-    />
+    >
+      {props.children}
+      {status === 'error' && (
+        <XCircleIcon className="absolute right-0.5 bottom-0.5 size-2 text-red-700 stroke-3" />
+      )}
+      {status === 'success' && (
+        <CheckCircle2Icon className="absolute right-0.5 bottom-0.5 size-2 text-green-700 stroke-3" />
+      )}
+      {status === 'loading' && (
+        <Spinner className="absolute -right-0.5 -bottom-0.5 size-2 text-blue-600 stroke-3" />
+      )}
+    </div>
   );
 }
 

@@ -1,5 +1,6 @@
 import { Toaster } from '@/components/ui/sonner';
 import { TRPCReactProvider } from '@/integrations/trpc/client';
+import { Provider } from 'jotai';
 import type { Metadata } from 'next';
 import { Noto_Sans } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className={`${notoSans.variable} antialiased`}>
         <TRPCReactProvider>
           <NuqsAdapter>
-            <Toaster />
-            {children}
+            <Provider>
+              <Toaster />
+              {children}
+            </Provider>
           </NuqsAdapter>
         </TRPCReactProvider>
       </body>

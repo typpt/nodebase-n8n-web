@@ -10,7 +10,7 @@ export const EditorAddNodeButton = memo(() => {
 
   return (
     <NodeSelector open={open} onOpenChange={setOpen}>
-      <Button type="button" onClick={() => {}} variant="outline" size="icon">
+      <Button type="button" variant="outline" size="icon">
         <PlusIcon className="size-4" />
       </Button>
     </NodeSelector>

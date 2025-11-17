@@ -19,7 +19,9 @@ import {
   applyNodeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { useSetAtom } from 'jotai';
 import { useCallback, useState } from 'react';
+import { editorAtom } from '../store/atoms';
 import { EditorAddNodeButton } from './editor-add-node-button';
 
 export function Editor({ workflowId }: { workflowId: string }) {
@@ -43,6 +45,8 @@ export function Editor({ workflowId }: { workflowId: string }) {
     []
   );
 
+  const setEditor = useSetAtom(editorAtom);
+
   return (
     <div className="size-full">
       <ReactFlow
@@ -52,7 +56,13 @@ export function Editor({ workflowId }: { workflowId: string }) {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeComponents}
+        onInit={setEditor}
         fitView
+        snapGrid={[10, 10]}
+        snapToGrid
+        panOnScroll
+        panOnDrag={false}
+        selectionOnDrag
       >
         <Background />
         <Controls />

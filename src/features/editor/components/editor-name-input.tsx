@@ -4,13 +4,13 @@ import { BreadcrumbItem } from '@/components/ui/breadcrumb';
 import { Input } from '@/components/ui/input';
 import {
   useSuspenseWorkflow,
-  useUpdateWorkflow,
+  useUpdateWorkflowName,
 } from '@/features/workflows/hooks/use-workflows';
 import { useEffect, useRef, useState } from 'react';
 
 export function EditorNameInput({ workflowId }: { workflowId: string }) {
   const { data: workflow } = useSuspenseWorkflow(workflowId);
-  const updateWorkflow = useUpdateWorkflow();
+  const updateWorkflow = useUpdateWorkflowName();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(workflow.name);
   const inputRef = useRef<HTMLInputElement>(null);

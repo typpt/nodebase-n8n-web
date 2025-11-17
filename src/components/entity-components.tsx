@@ -270,7 +270,7 @@ export function EntityItem({
 
     if (isRemoving) return;
 
-    if (onRemove) await onRemove();
+    if (onRemove) onRemove();
   }
 
   return (
