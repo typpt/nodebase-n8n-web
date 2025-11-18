@@ -33,7 +33,11 @@ import { useForm, useWatch } from 'react-hook-form';
 import z from 'zod';
 
 const formSchema = z.object({
-  endpoint: z.url({ message: 'Invalid URL' }),
+  variableName: z
+    .string()
+    .min(1)
+    .regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/, 'Variable name must be valid'),
+  endpoint: z.url({ message: 'Please enter a valid URL' }),
   method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
   body: z.string().optional(),
 });
@@ -54,6 +58,7 @@ export function HttpRequestDialog({
   const form = useForm<HttpRequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      variableName: defaultValues.variableName || '',
       body: defaultValues.body || '',
       endpoint: defaultValues.endpoint || '',
       method: defaultValues.method || 'GET',
@@ -63,6 +68,7 @@ export function HttpRequestDialog({
   useEffect(() => {
     if (open) {
       form.reset({
+        variableName: defaultValues.variableName || '',
         body: defaultValues.body || '',
         endpoint: defaultValues.endpoint || '',
         method: defaultValues.method || 'GET',
@@ -72,14 +78,22 @@ export function HttpRequestDialog({
     defaultValues.body,
     defaultValues.endpoint,
     defaultValues.method,
+    defaultValues.variableName,
     form,
     open,
   ]);
+
+  const watchVariableName =
+    useWatch({
+      control: form.control,
+      name: 'variableName',
+    }) || 'myApiResponse';
 
   const watchMethod = useWatch({
     control: form.control,
     name: 'method',
   });
+
   const showBodyField = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
     watchMethod
   );
@@ -95,15 +109,34 @@ export function HttpRequestDialog({
         <DialogHeader>
           <DialogTitle>HTTP Request Trigger</DialogTitle>
           <DialogDescription>
-            Configure settings for the HTTP Request node.
+            Configure an HTTP Request node. Specify a variable to store the
+            response, choose the HTTP method, set the endpoint URL, and provide
+            a request body if needed.
           </DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-8 mt-4"
           >
+            <FormField
+              control={form.control}
+              name="variableName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Variable Name</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="myApiResponse" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    The name of the variable where the HTTP response will be
+                    stored. Use {`{{${watchVariableName}.httpResponse.data}}`}{' '}
+                    to reference it elsewhere.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="method"
@@ -125,7 +158,9 @@ export function HttpRequestDialog({
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    The HTTP method to use for this request.
+                    The HTTP method to use for this request. The request body
+                    field will only appear for POST, PUT, PATCH, and DELETE
+                    methods.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -145,7 +180,9 @@ export function HttpRequestDialog({
                     />
                   </FormControl>
                   <FormDescription>
-                    Use {'{{variables}}'} for dynamic values.
+                    The target URL for the HTTP request. You can use{' '}
+                    {'{{variables}}'} to insert dynamic values from other
+                    variables.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -161,19 +198,13 @@ export function HttpRequestDialog({
                     <FormControl>
                       <Textarea
                         className="min-h-[150px] font-mono text-sm"
-                        placeholder={
-                          `{\n` +
-                          `  "userId": "{{httpResponse.data.id}}",\n` +
-                          `  "name": "{{httpResponse.data.name}}",\n` +
-                          `  "items": "{{json httpResponse.data.items}}"\n` +
-                          `}`
-                        }
+                        placeholder={`{\n  "userId": "{{httpResponse.data.id}}",\n  "name": "{{httpResponse.data.name}}",\n  "items": "{{json httpResponse.data.items}}"\n}`}
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Use {'{{variables}}'} or {'{{json variable}}'} for
-                      objects.
+                      The content of the request. Use {'{{variables}}'} for
+                      dynamic values or {'{{json variable}}'} for JSON objects.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
