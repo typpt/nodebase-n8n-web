@@ -1,27 +1,46 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { generateText } from 'ai';
+import { getExecutor } from '@/features/executions/lib/executor-registry';
+import { NodeType } from '@/generated/prisma/enums';
+import db from '@/lib/db';
+import { NonRetriableError } from 'inngest';
 import { inngest } from './client';
+import { topologicalSort } from './utils';
 
-const google = createGoogleGenerativeAI();
+export const executeWorkflow = inngest.createFunction(
+  { id: 'execute-workflow' },
+  { event: 'workflows/execute.workflow' },
 
-export const execute = inngest.createFunction(
-  { id: 'execute' },
-  { event: 'execute/ai' },
+  async ({ event, step }) => {
+    const workflowId = event.data.workflowId;
 
-  async ({ step }) => {
-    const { steps } = await step.ai.wrap('gemini-generate-text', generateText, {
-      model: google('gemini-2.5-flash'),
-      system:
-        'You are a helpful AI assistant that writes and explains things clearly and concisely.',
-      prompt:
-        'Write a short summary of an article about climate change in 3 sentences.',
-      experimental_telemetry: {
-        isEnabled: true,
-        recordInputs: true,
-        recordOutputs: true,
-      },
+    if (!workflowId) throw new NonRetriableError('Workflow ID is missing');
+
+    const sortedNodes = await step.run('prepare-workflow', async () => {
+      const workflow = await db.workflow.findUnique({
+        where: { id: workflowId },
+        include: { connections: true, nodes: true },
+      });
+
+      if (!workflow) throw new NonRetriableError('Workflow not found');
+
+      return topologicalSort(workflow.nodes, workflow.connections);
     });
 
-    return steps;
+    let context = {};
+
+    for (const node of sortedNodes) {
+      const executor = getExecutor(node.type as NodeType);
+
+      context = await executor({
+        context,
+        data: node.data as Record<string, unknown>,
+        nodeId: node.id,
+        step,
+      });
+    }
+
+    return {
+      sortedNodes,
+      result: context,
+    };
   }
 );

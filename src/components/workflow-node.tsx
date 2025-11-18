@@ -2,6 +2,7 @@
 
 import { NodeToolbar, Position } from '@xyflow/react';
 import { SettingsIcon, TrashIcon } from 'lucide-react';
+import { Activity } from 'react';
 import { Button } from './ui/button';
 
 type Props = {
@@ -23,7 +24,7 @@ export function WorkflowNode({
 }: Props) {
   return (
     <>
-      {showToolbar && (
+      <Activity mode={!!showToolbar ? 'visible' : 'hidden'}>
         <NodeToolbar>
           <Button type="button" onClick={onSettings} variant="ghost" size="sm">
             <SettingsIcon className="size-4" />
@@ -32,9 +33,9 @@ export function WorkflowNode({
             <TrashIcon className="size-4" />
           </Button>
         </NodeToolbar>
-      )}
+      </Activity>
       {children}
-      {name && (
+      <Activity mode={!!name ? 'visible' : 'hidden'}>
         <NodeToolbar
           isVisible
           position={Position.Bottom}
@@ -47,7 +48,7 @@ export function WorkflowNode({
             </p>
           )}
         </NodeToolbar>
-      )}
+      </Activity>
     </>
   );
 }

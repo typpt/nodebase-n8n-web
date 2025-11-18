@@ -3,6 +3,7 @@
 import { EntityLoading } from '@/components/entity-components';
 import { nodeComponents } from '@/constant/node-components';
 import { useSuspenseWorkflow } from '@/features/workflows/hooks/use-workflows';
+import { NodeType } from '@/generated/prisma/enums';
 import {
   Background,
   type Connection,
@@ -20,9 +21,10 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useSetAtom } from 'jotai';
-import { useCallback, useState } from 'react';
+import { Activity, useCallback, useMemo, useState } from 'react';
 import { editorAtom } from '../store/atoms';
 import { EditorAddNodeButton } from './editor-add-node-button';
+import { ExecuteWorkflowButton } from './execute-workflow-button';
 
 export function Editor({ workflowId }: { workflowId: string }) {
   const { data: workflow } = useSuspenseWorkflow(workflowId);
@@ -46,6 +48,10 @@ export function Editor({ workflowId }: { workflowId: string }) {
   );
 
   const setEditor = useSetAtom(editorAtom);
+  const hasManualTrigger = useMemo(
+    () => nodes.some((node) => node.type === NodeType.MANUAL_TRIGGER),
+    [nodes]
+  );
 
   return (
     <div className="size-full">
@@ -70,6 +76,11 @@ export function Editor({ workflowId }: { workflowId: string }) {
         <Panel position="top-right">
           <EditorAddNodeButton />
         </Panel>
+        <Activity mode={hasManualTrigger ? 'visible' : 'hidden'}>
+          <Panel position="bottom-center">
+            <ExecuteWorkflowButton workflowId={workflowId} />
+          </Panel>
+        </Activity>
       </ReactFlow>
     </div>
   );
