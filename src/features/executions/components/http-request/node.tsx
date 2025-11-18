@@ -2,11 +2,12 @@
 
 import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { GlobeIcon } from 'lucide-react';
-import { memo, useState, ViewTransition } from 'react';
+import { memo, useState } from 'react';
 import { BaseExecutionNode } from '../base-execution-node';
 import { HttpRequestDialog, HttpRequestFormValues } from './dialog';
 
 type HttpRequestNodeData = {
+  variableName?: string;
   endpoint?: string;
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: string;
@@ -40,14 +41,12 @@ export const HttpRequestNode = memo((props: NodeProps<HttpRequestNodeType>) => {
 
   return (
     <>
-      <ViewTransition>
-        <HttpRequestDialog
-          open={open}
-          onSubmit={handleSubmit}
-          onOpenChange={setOpen}
-          defaultValues={nodeData}
-        />
-      </ViewTransition>
+      <HttpRequestDialog
+        open={open}
+        onSubmit={handleSubmit}
+        onOpenChange={setOpen}
+        defaultValues={nodeData}
+      />
       <BaseExecutionNode
         {...props}
         id={props.id}
