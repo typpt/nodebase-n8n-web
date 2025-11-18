@@ -24,6 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Activity } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { LoginFormValues, loginSchema } from '../validators/auth-validator';
@@ -98,7 +99,6 @@ export default function LoginForm() {
                     size="lg"
                     className="w-full"
                   >
-                    {' '}
                     <Image
                       src="/github.svg"
                       alt="Github"
@@ -152,7 +152,9 @@ export default function LoginForm() {
                     size="lg"
                     className="w-full"
                   >
-                    {isPending && <Spinner />}
+                    <Activity mode={isPending ? 'visible' : 'hidden'}>
+                      <Spinner />
+                    </Activity>
                     <span>Login</span>
                   </Button>
                 </div>

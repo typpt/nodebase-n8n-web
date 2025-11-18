@@ -24,6 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Activity } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import {
@@ -101,7 +102,6 @@ export default function RegisterForm() {
                     size="lg"
                     className="w-full"
                   >
-                    {' '}
                     <Image
                       src="/github.svg"
                       alt="Github"
@@ -191,7 +191,9 @@ export default function RegisterForm() {
                     size="lg"
                     className="w-full"
                   >
-                    {isPending && <Spinner />}
+                    <Activity mode={isPending ? 'visible' : 'hidden'}>
+                      <Spinner />
+                    </Activity>
                     <span>Sign up</span>
                   </Button>
                 </div>

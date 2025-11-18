@@ -13,7 +13,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { Activity, useTransition } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -113,7 +113,9 @@ export default function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {!hasActiveSubcription && !isLoading && (
+          <Activity
+            mode={!hasActiveSubcription && !isLoading ? 'visible' : 'hidden'}
+          >
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={async () => await authClient.checkout({ slug: 'pro' })}
@@ -124,7 +126,7 @@ export default function AppSidebar() {
                 <span>Upgrade to Pro</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          )}
+          </Activity>
         </SidebarMenu>
         <SidebarMenu>
           <SidebarMenuItem>

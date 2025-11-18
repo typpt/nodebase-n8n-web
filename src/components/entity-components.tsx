@@ -8,6 +8,7 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { Activity } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardTitle } from './ui/card';
 import {
@@ -52,13 +53,13 @@ export function EntityHeader({
     <div className="flex flex-row items-center justify-between gap-x-4">
       <div className="flex flex-col">
         <h1 className="text-lg md:text-2xl font-semibold">{title}</h1>
-        {description && (
+        <Activity mode={!!description ? 'visible' : 'hidden'}>
           <p className="text-xs md:text-sm text-muted-foreground">
             {description}
           </p>
-        )}
+        </Activity>
       </div>
-      {onNew && !newButtonHref && (
+      <Activity mode={!!onNew && !newButtonHref ? 'visible' : 'hidden'}>
         <Button
           type="button"
           onClick={onNew}
@@ -69,8 +70,8 @@ export function EntityHeader({
           <PlusIcon className="size-4" />
           {newButtonLabel}
         </Button>
-      )}
-      {newButtonHref && !onNew && (
+      </Activity>
+      <Activity mode={!!newButtonHref && !onNew ? 'visible' : 'hidden'}>
         <Button
           asChild
           type="button"
@@ -78,12 +79,12 @@ export function EntityHeader({
           variant="default"
           size="sm"
         >
-          <Link href={newButtonHref} prefetch>
+          <Link href={newButtonHref!} prefetch>
             <PlusIcon className="size-4" />
             {newButtonLabel}
           </Link>
         </Button>
-      )}
+      </Activity>
     </div>
   );
 }
@@ -163,7 +164,9 @@ export function EntityLoading({ message }: EntityStateProps) {
   return (
     <div className="flex flex-col flex-1 items-center justify-center h-full gap-y-4">
       <Spinner className="size-6" />
-      {!!message && <p className="text-sm text-muted-foreground">{message}</p>}
+      <Activity mode={!!message ? 'visible' : 'hidden'}>
+        <p className="text-sm text-muted-foreground">{message}</p>
+      </Activity>
     </div>
   );
 }
@@ -172,7 +175,9 @@ export function EntityError({ message }: EntityStateProps) {
   return (
     <div className="flex flex-col flex-1 items-center justify-center h-full gap-y-4">
       <TriangleAlertIcon className="size-6 text-primary" />
-      {!!message && <p className="text-sm text-muted-foreground">{message}</p>}
+      <Activity mode={!!message ? 'visible' : 'hidden'}>
+        <p className="text-sm text-muted-foreground">{message}</p>
+      </Activity>
     </div>
   );
 }
@@ -190,9 +195,11 @@ export function EntityEmpty({ disabled, message, onNew }: EntityEmptyProps) {
           <PackageOpenIcon className="size-6" />
         </EmptyMedia>
         <EmptyTitle>No Items</EmptyTitle>
-        {!!message && <EmptyDescription>{message}</EmptyDescription>}{' '}
+        <Activity mode={!!message ? 'visible' : 'hidden'}>
+          <EmptyDescription>{message}</EmptyDescription>
+        </Activity>
       </EmptyHeader>
-      {!!onNew && (
+      <Activity mode={!!onNew ? 'visible' : 'hidden'}>
         <EmptyContent>
           <Button
             type="button"
@@ -204,7 +211,7 @@ export function EntityEmpty({ disabled, message, onNew }: EntityEmptyProps) {
             Add Item
           </Button>
         </EmptyContent>
-      )}
+      </Activity>
     </Empty>
   );
 }
@@ -287,14 +294,14 @@ export function EntityItem({
             {image}
             <div>
               <CardTitle className="text-base font-medium">{title}</CardTitle>
-              {!!subtitle && (
+              <Activity mode={!!subtitle ? 'visible' : 'hidden'}>
                 <CardDescription className="text-sm">
                   {subtitle}
                 </CardDescription>
-              )}
+              </Activity>
             </div>
           </div>
-          {(onRemove || actions) && (
+          <Activity mode={!!onRemove || !!actions ? 'visible' : 'hidden'}>
             <div className="flex items-center gap-x-4">
               {actions}
               <DropdownMenu>
@@ -316,7 +323,7 @@ export function EntityItem({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          )}
+          </Activity>
         </CardContent>
       </Card>
     </Link>

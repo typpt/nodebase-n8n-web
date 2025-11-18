@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect } from 'react';
+import React, { Activity, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import z from 'zod';
 
@@ -38,41 +38,43 @@ const formSchema = z.object({
   body: z.string().optional(),
 });
 
-export type FormValuesType = z.infer<typeof formSchema>;
+export type HttpRequestFormValues = z.infer<typeof formSchema>;
 
 export function HttpRequestDialog({
   open,
   onOpenChange,
-  defaultBody = '',
-  defaultEndpoint = '',
-  defaultMethod = 'GET',
+  defaultValues = {},
   onSubmit,
 }: {
   open: boolean;
   onOpenChange: React.Dispatch<React.SetStateAction<boolean>>;
-  onSubmit?: (values: FormValuesType) => void;
-  defaultEndpoint?: string;
-  defaultMethod?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  defaultBody?: string;
+  onSubmit?: (values: HttpRequestFormValues) => void;
+  defaultValues: Partial<HttpRequestFormValues>;
 }) {
-  const form = useForm<FormValuesType>({
+  const form = useForm<HttpRequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      body: defaultBody,
-      endpoint: defaultEndpoint,
-      method: defaultMethod,
+      body: defaultValues.body || '',
+      endpoint: defaultValues.endpoint || '',
+      method: defaultValues.method || 'GET',
     },
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        body: defaultBody,
-        endpoint: defaultEndpoint,
-        method: defaultMethod,
+        body: defaultValues.body || '',
+        endpoint: defaultValues.endpoint || '',
+        method: defaultValues.method || 'GET',
       });
     }
-  }, [defaultBody, defaultEndpoint, defaultMethod, form, open]);
+  }, [
+    defaultValues.body,
+    defaultValues.endpoint,
+    defaultValues.method,
+    form,
+    open,
+  ]);
 
   const watchMethod = useWatch({
     control: form.control,
@@ -82,7 +84,7 @@ export function HttpRequestDialog({
     watchMethod
   );
 
-  function handleSubmit(values: z.infer<typeof formSchema>) {
+  function handleSubmit(values: HttpRequestFormValues) {
     onSubmit?.(values);
     onOpenChange(false);
   }
@@ -149,7 +151,7 @@ export function HttpRequestDialog({
                 </FormItem>
               )}
             />
-            {showBodyField && (
+            <Activity mode={showBodyField ? 'visible' : 'hidden'}>
               <FormField
                 control={form.control}
                 name="body"
@@ -177,7 +179,7 @@ export function HttpRequestDialog({
                   </FormItem>
                 )}
               />
-            )}
+            </Activity>
             <DialogFooter className="mt-4">
               <Button type="submit" className="w-full">
                 Save
