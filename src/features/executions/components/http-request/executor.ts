@@ -1,7 +1,8 @@
 import { NodeExecutor } from '@/features/types';
+import { httpRequestChannel } from '@/integrations/inngest/channel/http-request';
 import Handlebars from 'handlebars';
 import { NonRetriableError } from 'inngest';
-import ky, { Options as KyOptions } from 'ky';
+import ky, { HTTPError, Options as KyOptions } from 'ky';
 
 type HttpRequestData = {
   variableName: string;
@@ -11,65 +12,117 @@ type HttpRequestData = {
 };
 
 Handlebars.registerHelper('json', (context) => {
-  const jsonString = JSON.stringify(context, null, 2);
-  const safeString = new Handlebars.SafeString(jsonString);
-  return safeString;
+  return new Handlebars.SafeString(JSON.stringify(context, null, 2));
 });
 
 export const httpRequestExecutor: NodeExecutor<HttpRequestData> = async ({
+  nodeId,
   context,
   data,
   step,
+  publish,
 }) => {
+  await publish(httpRequestChannel().status({ nodeId, status: 'loading' }));
+
   if (!data.endpoint) {
+    await publish(httpRequestChannel().status({ nodeId, status: 'error' }));
     throw new NonRetriableError('HTTP Request node: No endpoint configured');
-  } else if (!data.variableName) {
+  }
+  if (!data.variableName) {
+    await publish(httpRequestChannel().status({ nodeId, status: 'error' }));
     throw new NonRetriableError(
       'HTTP Request node: Variable name not configured'
     );
-  } else if (!data.method) {
+  }
+  if (!data.method) {
+    await publish(httpRequestChannel().status({ nodeId, status: 'error' }));
     throw new NonRetriableError('HTTP Request node: Method not configured');
   }
 
-  const result = await step.run('http-request', async () => {
-    const endpoint = Handlebars.compile(data.endpoint)(context);
-    const method = data.method ?? 'GET';
+  try {
+    const result = await step.run('http-request', async () => {
+      const compiledEndpoint = Handlebars.compile(data.endpoint);
+      const endpoint = compiledEndpoint(context);
 
-    const headers = new Headers();
+      const method = data.method ?? 'GET';
 
-    const options: KyOptions = {
-      method,
-      headers,
-    };
+      const headers = new Headers();
+      const options: KyOptions = { method, headers };
 
-    if (['POST', 'PUT', 'PATCH'].includes(method) && data.body) {
-      headers.set('Content-Type', 'application/json');
+      if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        if (data.body) {
+          headers.set('Content-Type', 'application/json');
 
-      const resolved = Handlebars.compile(data.body || '{}')(context);
-      JSON.parse(resolved);
-      options.body = resolved;
-    }
+          const compiledBody = Handlebars.compile(data.body);
+          const resolvedBody = compiledBody(context);
 
-    const response = await ky(endpoint, options);
+          try {
+            JSON.parse(resolvedBody);
+            options.body = resolvedBody;
+          } catch {
+            throw new NonRetriableError(
+              'HTTP Request node: Body is not valid JSON after template resolution'
+            );
+          }
+        }
+      }
 
-    const contentType = response.headers.get('Content-Type');
-    const responseData = contentType?.includes('application/json')
-      ? await response.json()
-      : await response.text();
-    const responsePayload = {
-      httpResponse: {
-        ok: response.ok,
-        status: response.status,
-        statusText: response.statusText,
-        data: responseData,
-      },
-    };
+      let response;
 
-    return {
-      ...context,
-      [data.variableName]: responsePayload,
-    };
-  });
+      try {
+        response = await ky(endpoint, options);
+      } catch (error) {
+        if (error instanceof HTTPError) {
+          const errorData = await error.response.text().catch(() => null);
 
-  return result;
+          return {
+            ...context,
+            [data.variableName]: {
+              httpResponse: {
+                ok: false,
+                status: error.response.status,
+                statusText: error.response.statusText,
+                data: (() => {
+                  try {
+                    return JSON.parse(errorData ?? '');
+                  } catch {
+                    return errorData;
+                  }
+                })(),
+              },
+            },
+          };
+        }
+
+        throw error;
+      }
+
+      const contentType = response.headers.get('Content-Type') || '';
+      let responseData: unknown;
+
+      if (contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
+      }
+
+      return {
+        ...context,
+        [data.variableName]: {
+          httpResponse: {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            data: responseData,
+          },
+        },
+      };
+    });
+
+    await publish(httpRequestChannel().status({ nodeId, status: 'success' }));
+    return result;
+  } catch (err) {
+    await publish(httpRequestChannel().status({ nodeId, status: 'error' }));
+    throw err;
+  }
 };

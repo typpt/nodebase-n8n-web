@@ -1,9 +1,12 @@
 'use client';
 
+import { HTTP_REQUEST_CHANNEL_NAME } from '@/integrations/inngest/channel/http-request';
 import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { GlobeIcon } from 'lucide-react';
 import { memo, useState } from 'react';
+import { useNodeStatus } from '../../hooks/use-node-status';
 import { BaseExecutionNode } from '../base-execution-node';
+import { fetchHttpRequestToken } from './actions';
 import { HttpRequestDialog, HttpRequestFormValues } from './dialog';
 
 type HttpRequestNodeData = {
@@ -19,7 +22,12 @@ export const HttpRequestNode = memo((props: NodeProps<HttpRequestNodeType>) => {
   const [open, setOpen] = useState(false);
   const { setNodes } = useReactFlow();
 
-  const nodeStatus = 'initial';
+  const nodeStatus = useNodeStatus({
+    channel: HTTP_REQUEST_CHANNEL_NAME,
+    nodeId: props.id,
+    refreshToken: fetchHttpRequestToken,
+    topic: 'status',
+  });
   const nodeData = props.data as HttpRequestNodeData;
   const description = nodeData.endpoint
     ? `${nodeData.method || 'GET'}: ${nodeData.endpoint}`
