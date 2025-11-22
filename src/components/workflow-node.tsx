@@ -41,9 +41,9 @@ export function WorkflowNode({
           position={Position.Bottom}
           className="max-w-[200px] text-center"
         >
-          <h3 className="font-medium">{name}</h3>
+          <h3 className="font-medium text-sm">{name}</h3>
           {description && (
-            <p className="text-muted-foreground truncate text-sm">
+            <p className="text-muted-foreground truncate text-xs">
               {description}
             </p>
           )}

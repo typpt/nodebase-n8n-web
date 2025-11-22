@@ -32,6 +32,12 @@ const triggerNodes: NodeTypeOption[] = [
     label: 'Trigger Manually',
     type: NodeType.MANUAL_TRIGGER,
   },
+  {
+    description: 'Run the flow when a Google Form.',
+    icon: '/google-form.svg',
+    label: 'Google Form',
+    type: NodeType.GOOGLE_FORM_TRIGGER,
+  },
 ];
 
 const executionNodes: NodeTypeOption[] = [
@@ -121,6 +127,8 @@ export function NodeSelector({ children, onOpenChange, open }: Props) {
                     <Image
                       src={Icon}
                       alt={node.label}
+                      width={20}
+                      height={20}
                       className="size-5 object-contain rounded-sm"
                     />
                   ) : (

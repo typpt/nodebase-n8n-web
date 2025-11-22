@@ -26,8 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Editor from '@monaco-editor/react';
 import React, { Activity, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import z from 'zod';
@@ -37,7 +37,7 @@ const formSchema = z.object({
     .string()
     .min(1)
     .regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/, 'Variable name must be valid'),
-  endpoint: z.url({ message: 'Please enter a valid URL' }),
+  endpoint: z.string().min(1, { message: 'Please enter a valid URL' }),
   method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
   body: z.string().optional(),
 });
@@ -174,7 +174,7 @@ export function HttpRequestDialog({
                   <FormLabel>Endpoint URL</FormLabel>
                   <FormControl>
                     <Input
-                      type="url"
+                      type="text"
                       placeholder="http://api.example.com/users/{{httpResponse.data.id}}"
                       {...field}
                     />
@@ -196,11 +196,30 @@ export function HttpRequestDialog({
                   <FormItem>
                     <FormLabel>Request Body</FormLabel>
                     <FormControl>
-                      <Textarea
-                        className="min-h-[150px] font-mono text-sm"
-                        placeholder={`{\n  "userId": "{{httpResponse.data.id}}",\n  "name": "{{httpResponse.data.name}}",\n  "items": "{{json httpResponse.data.items}}"\n}`}
-                        {...field}
-                      />
+                      <div className="border rounded-md overflow-hidden">
+                        <Editor
+                          height="150px"
+                          defaultLanguage="json"
+                          value={field.value}
+                          onChange={(value) => field.onChange(value ?? '')}
+                          options={{
+                            minimap: { enabled: false },
+                            fontSize: 14,
+                            formatOnPaste: true,
+                            formatOnType: true,
+                            wordWrap: 'on',
+                            scrollBeyondLastLine: false,
+                            automaticLayout: true,
+                            bracketPairColorization: { enabled: true },
+                            tabSize: 2,
+                            padding: {
+                              top: 15,
+                              bottom: 15,
+                            },
+                            lineNumbers: 'off',
+                          }}
+                        />
+                      </div>
                     </FormControl>
                     <FormDescription>
                       The content of the request. Use {'{{variables}}'} for
